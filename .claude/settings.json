@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"PostToolUse\", \"additionalContext\": \"git commit 刚刚完成。请检查本次提交是否属于大版本变更。如果是，请主动提议：1) 创建 git tag（如 v1.0.0 / v2.0.0），2) 推送 tag 到 GitHub（git push origin <tag>），3) 使用 gh release create 创建 GitHub Release，并附上本次更改的简要说明。\"}}'",
+            "statusMessage": "检查是否需要发布新版本..."
+          }
+        ]
+      }
+    ]
+  }
+}

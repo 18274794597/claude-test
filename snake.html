@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>贪吃蛇 v1.0</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      color: #eee;
+    }
+    h1 { margin-bottom: 10px; font-size: 24px; letter-spacing: 2px; color: #4ecca3; }
+    #score { margin-bottom: 12px; font-size: 18px; }
+    canvas {
+      border: 2px solid #4ecca3;
+      background: #16213e;
+    }
+    #message {
+      margin-top: 14px;
+      font-size: 16px;
+      color: #f5a623;
+      min-height: 24px;
+    }
+    #restart {
+      margin-top: 10px;
+      padding: 8px 24px;
+      background: #4ecca3;
+      border: none;
+      border-radius: 4px;
+      font-size: 15px;
+      cursor: pointer;
+      color: #1a1a2e;
+      display: none;
+    }
+    #restart:hover { background: #38b89a; }
+  </style>
+</head>
+<body>
+  <h1>贪吃蛇 v1.0</h1>
+  <div id="score">得分：0</div>
+  <canvas id="c" width="400" height="400"></canvas>
+  <div id="message">用方向键控制蛇的移动</div>
+  <button id="restart" onclick="init()">重新开始</button>
+
+  <script>
+    const COLS = 20, ROWS = 20, CELL = 20;
+    const canvas = document.getElementById('c');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+    const msgEl = document.getElementById('message');
+    const restartBtn = document.getElementById('restart');
+
+    let snake, dir, nextDir, food, score, timer, running;
+
+    function randomCell() {
+      return {
+        x: Math.floor(Math.random() * COLS),
+        y: Math.floor(Math.random() * ROWS)
+      };
+    }
+
+    function placeFood() {
+      let pos;
+      do {
+        pos = randomCell();
+      } while (snake.some(s => s.x === pos.x && s.y === pos.y));
+      food = pos;
+    }
+
+    function init() {
+      snake = [{x: 10, y: 10}, {x: 9, y: 10}, {x: 8, y: 10}];
+      dir = {x: 1, y: 0};
+      nextDir = {x: 1, y: 0};
+      score = 0;
+      running = true;
+      scoreEl.textContent = '得分：0';
+      msgEl.textContent = '用方向键控制蛇的移动';
+      restartBtn.style.display = 'none';
+      clearInterval(timer);
+      placeFood();
+      timer = setInterval(step, 150);
+    }
+
+    function step() {
+      dir = nextDir;
+      const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+
+      // 撞墙
+      if (head.x < 0 || head.x >= COLS || head.y < 0 || head.y >= ROWS) {
+        return gameOver();
+      }
+      // 撞自身
+      if (snake.some(s => s.x === head.x && s.y === head.y)) {
+        return gameOver();
+      }
+
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        scoreEl.textContent = '得分：' + score;
+        placeFood();
+      } else {
+        snake.pop();
+      }
+
+      draw();
+    }
+
+    function gameOver() {
+      clearInterval(timer);
+      running = false;
+      msgEl.textContent = '游戏结束！最终得分：' + score;
+      restartBtn.style.display = 'inline-block';
+    }
+
+    function draw() {
+      ctx.fillStyle = '#16213e';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 食物
+      ctx.fillStyle = '#f5a623';
+      ctx.fillRect(food.x * CELL + 2, food.y * CELL + 2, CELL - 4, CELL - 4);
+
+      // 蛇
+      snake.forEach((s, i) => {
+        ctx.fillStyle = i === 0 ? '#4ecca3' : '#2eaa83';
+        ctx.fillRect(s.x * CELL + 1, s.y * CELL + 1, CELL - 2, CELL - 2);
+      });
+    }
+
+    document.addEventListener('keydown', e => {
+      if (!running) return;
+      const keys = {
+        ArrowUp:    {x: 0,  y: -1},
+        ArrowDown:  {x: 0,  y:  1},
+        ArrowLeft:  {x: -1, y:  0},
+        ArrowRight: {x: 1,  y:  0}
+      };
+      const d = keys[e.key];
+      if (!d) return;
+      // 不能反向
+      if (d.x === -dir.x && d.y === -dir.y) return;
+      nextDir = d;
+      e.preventDefault();
+    });
+
+    init();
+  </script>
+</body>
+</html>
